@@ -13,12 +13,12 @@ from mcp.client.stdio import stdio_client
 import aiohttp
 from dotenv import load_dotenv
 
+import os
+
 load_dotenv()
 
-# --- Configuration for Gemini API ---
-# NOTE: The actual API key should be loaded securely from environment variables.
-# In a local environment, this will typically be fetched from the environment.
-API_KEY = "" # Replace with your actual API Key if not using the default runtime
+
+API_KEY = os.getenv("API_KEY")
 MODEL_NAME = "gemini-2.5-flash"
 API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent"
 # ------------------------------------
