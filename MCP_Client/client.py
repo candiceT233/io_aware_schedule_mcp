@@ -18,7 +18,7 @@ load_dotenv()
 # --- Configuration for Gemini API ---
 # NOTE: The actual API key should be loaded securely from environment variables.
 # In a local environment, this will typically be fetched from the environment.
-API_KEY = "AIzaSyDqzw4U3HDjGf2gXAAqHzT6H1AgtHssKMs" # Replace with your actual API Key if not using the default runtime
+API_KEY = "" # Replace with your actual API Key if not using the default runtime
 MODEL_NAME = "gemini-2.5-flash"
 API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent"
 # ------------------------------------
