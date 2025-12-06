@@ -1,0 +1,3 @@
+[submodule "MCP_Server/spm"]
+	path = MCP_Server/spm
+	url = https://github.com/candiceT233/spm.git

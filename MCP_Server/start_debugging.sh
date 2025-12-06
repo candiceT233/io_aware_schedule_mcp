@@ -1,0 +1,1 @@
+npx @modelcontextprotocol/inspector uv run main.py
