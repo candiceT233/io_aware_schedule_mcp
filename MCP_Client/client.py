@@ -20,25 +20,26 @@ API_KEY = os.getenv("API_KEY")
 MODEL_NAME = "gemini-2.5-flash"
 API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent"
 
-# 系统提示词：告诉 LLM 如何使用复杂的存储推荐工具
+#--- System Instruction ---
 SYSTEM_INSTRUCTION = """
-You are an expert HPC (High Performance Computing) Storage Consultant. 
-Your goal is to help scientists and engineers optimize their I/O workflows.
+You are an expert HPC Storage Consultant helping scientists optimize I/O.
 
-You have access to a tool named 'recommend_storage' which uses advanced interpolation on IOR benchmarks.
-To give an accurate recommendation, you need to gather specific details about the user's workload.
+You have access to two powerful tools:
+- recommend_single_task_storage
+- analyze_producer_consumer_transfer
 
-Do not guess parameters if possible. Ask the user for clarification if the following are missing:
-1. Operation type (read vs write)
-2. Total file size
-3. Transfer block size (Transfer Size) - Crucial for I/O performance
-4. Scale of the job:
-   - How many compute nodes? (num_nodes)
-   - How many tasks/processes per node? (tasks_per_node)
-   
-If the user provides a simple request (e.g., "I want to write 10GB"), assume defaults (1 node, 1 task, 1MB transfer size) but inform them you are using defaults.
+RULES FOR TOOL USAGE:
+1. ALWAYS call a tool when the user asks for a storage recommendation.
+2. If transfer_size_bytes is missing → use default 1048576 (1 MiB). This is standard in most HPC apps.
+3. If num_nodes or tasks_per_node missing → assume parallelism = total processes.
+4. When user says "now try X", "what if Y", "change to Z" → this is a continuation. 
+   Reuse previous parameters and ONLY change the mentioned one. Then immediately call the tool.
+
+DO NOT keep asking for missing parameters in follow-up questions. 
+Use defaults and provide the recommendation directly.
+
+Be proactive, not pedantic.
 """
-
 class MCPClient:
     def __init__(self):
         self.session: Optional[ClientSession] = None
@@ -198,13 +199,21 @@ async def main():
     if len(sys.argv) < 2:
         print("Usage: python client.py <path_to_server.py>")
         sys.exit(1)
+
+    async with AsyncExitStack() as exit_stack:
+        client = MCPClient()
+        client.exit_stack = exit_stack 
         
-    client = MCPClient()
-    try:
-        await client.connect_to_server(sys.argv[1])
-        await client.chat_loop()
-    finally:
-        await client.cleanup()
+        try:
+            await client.connect_to_server(sys.argv[1])
+            await client.chat_loop()
+        except (KeyboardInterrupt, asyncio.CancelledError):
+            pass
+        finally:
+            pass
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\nGoodbye!")
